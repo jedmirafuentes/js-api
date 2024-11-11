@@ -1,6 +1,6 @@
 import mongo from '../config/db.js';
 
-const permissionSchema = new mongo.schema({
+const apiAccessSchema = new mongo.schema({
     clientName: {
         type: String,
         required: [true, "Client name is required."]
@@ -37,6 +37,6 @@ const permissionSchema = new mongo.schema({
     }
 });
 
-const permissionModel = mongo.mongoose.model("permissions", permissionSchema);
+const apiAccessModel = mongo.mongoose.model("permissions", apiAccessSchema);
 
-export default permissionModel;
+export default apiAccessModel;
