@@ -9,6 +9,10 @@ const citySchema = new mongo.schema({
         type: String,
         default: ""
     },
+    cityClass: {
+        type: String,
+        default: ""
+    },
     cityMunicipality: {
         type: String,
         default: ""

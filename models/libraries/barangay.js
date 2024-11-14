@@ -13,10 +13,10 @@ const barangaySchema = new mongo.schema({
         type: String,
         default: ""
     },
-    subMunicipality: {
-        type: String,
-        default: ""
-    },
+    // subMunicipality: {
+    //     type: String,
+    //     default: ""
+    // },
     barangay: {
         type: String,
         default: ""
