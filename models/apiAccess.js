@@ -5,27 +5,14 @@ const apiAccessSchema = new mongo.schema({
         type: String,
         required: [true, "Client name is required."]
     },
-    // methods: {
-
-    // }
-    apiAccessToken: {
-        type: mongo.schema.Types.ObjectId,
-        default: null
-    },
     applicationSecret: {
         type: String,
         default: ""
     },
-    applicationId: {
-        type: String,
-        default: ""
+    apiAccessToken: {
+        type: mongo.schema.Types.ObjectId,
+        default: null
     },
-    role: {
-        type: String,
-        enum: ["Admin", "User"],
-        required: [true, "Role is required."]
-    },
-    apiEndpoints: [ String ],
     libraries: [ mongo.schema.Types.ObjectId ], // library name and version
     author: {
         type: String,
@@ -35,8 +22,8 @@ const apiAccessSchema = new mongo.schema({
         type: Boolean,
         default: true
     }
-});
+}, { timestamps: true });
 
-const apiAccessModel = mongo.mongoose.model("permissions", apiAccessSchema);
+const apiAccessModel = mongo.mongoose.model("apiAccess", apiAccessSchema);
 
 export default apiAccessModel;

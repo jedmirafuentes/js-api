@@ -14,25 +14,13 @@ const userSchema = new mongo.schema({
         type: String,
         default: ""
     },
-    middlename: {
-        type: String,
-        default: ""
-    },
     lastname: {
         type: String,
         default: ""
     },
-    permission: { 
-        type: mongo.schema.Types.ObjectId,
-        required: [true, "Permission is required."]
-    },
     role: { // auth for managing this service -user -admin
         type: String,
         required: [true, "Role is required."]
-    },
-    agency: {
-        type: String,
-        default: ""
     },
     author: {
         type: String,
