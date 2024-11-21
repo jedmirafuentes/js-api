@@ -14,7 +14,7 @@ const psgcVersionSchema = new mongo.schema({
         type: Boolean,
         default: true
     }
-}, { _id: true, timestamps: true });
+}, { timestamps: true });
 
 const psgcVersionModel = mongo.mongoose.model("psgcVersions", psgcVersionSchema);
 

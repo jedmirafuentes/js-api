@@ -9,8 +9,6 @@ route.get('/provinces', librariesController.fetchProvinces);
 
 route.get('/munCities', librariesController.fetchMunCities);
 
-route.get('/subMunicipalities', librariesController.fetchSubMunicipalities);
-
 route.get('/barangays', librariesController.fetchBarangays);
 
 export default route;
