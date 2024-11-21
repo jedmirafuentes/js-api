@@ -3,7 +3,6 @@ import regionModel from '../../models/libraries/region.js';
 import provinceModel from '../../models/libraries/province.js';
 import cityModel from '../../models/libraries/cityMunicipality.js';
 import barangayModel from '../../models/libraries/barangay.js';
-// import subMunicipalityModel from '../../models/libraries/subMunicipality.js';
 import psgcVersionModel from '../../models/psgcVersion.js';
 import mongo from '../../config/db.js';
 
@@ -30,7 +29,6 @@ function disseminate(psgcList, header) {
     let regionData = [];
     let provinceData = [];
     let cityMunicipalityData = [];
-    // let subMunicipalitiesData = [];
     let barangayData = [];
     let last_occurred_city = {};
     const destruct = (code, zeroCount) => {
@@ -38,9 +36,6 @@ function disseminate(psgcList, header) {
     };
     const lookUp = (code) => {
         return psgcList.find(rowPos => rowPos[header[0]] === code);
-    };
-    const findIndex = (code) => {
-        return psgcList.findIndex(rowPos => rowPos[header[0]] === code)
     };
 
     psgcList.forEach((data) => {
@@ -63,15 +58,22 @@ function disseminate(psgcList, header) {
         } else if (data[header[3]] === "City" || data[header[3]] === "Mun" || data[header[3]] === "SubMun") {
             if (data[header[3]] === "SubMun") {
                 let cityOrigin = lookUp(destruct(data[header[0]], 5)); // assuming the city is 5digit and 5digit zeros
-                if (last_occurred_city) {
-                    if (cityOrigin[header[1]] !== last_occurred_city[header[1]]) 
-                        last_occurred_city = cityOrigin;
-                } else {
-                    let indexToBeRemove = findIndex(destruct(data[header[0]], 5));
+                
+                if (Object.keys(last_occurred_city).length === 0) {
                     last_occurred_city = cityOrigin;
-                    cityMunicipalityData.splice(indexToBeRemove, 1);
+                    console.log("last_occurred_city: ", last_occurred_city);
+
+                    let cityIndex = cityMunicipalityData.findIndex(element => element.tenDigitCode === last_occurred_city[header[0]]);
+
+                    cityMunicipalityData.splice(cityIndex, 1);
+                } else if (cityOrigin[header[1]] !== last_occurred_city[header[1]]) {
+                    last_occurred_city = cityOrigin;
+                    console.log("last_occurred_city: ", last_occurred_city);
+
+                    let cityIndex = cityMunicipalityData.findIndex(element => element.tenDigitCode === last_occurred_city[header[0]]);
+                    
+                    cityMunicipalityData.splice(cityIndex, 1);
                 }
-                console.log("last_occurred_city: ", last_occurred_city)
                 objData.region = destruct(data[header[0]], 8);
                 objData.province = "";
                 objData.cityMunicipality = `${last_occurred_city[header[1]]} - ${data[header[1]]}`
@@ -88,32 +90,11 @@ function disseminate(psgcList, header) {
                 cityMunicipalityData.push(objData);
             }
         } 
-        // else if (data[header[3]] === "SubMun") {
-        //     objData.region = destruct(data[header[0]], 8);
-        //     objData.cityMunicipality = destruct(data[header[0]], 5);
-        //     objData.subMunicipality = data[header[1]];
-        //     subMunicipalitiesData.push(objData);
-        // } 
         else if (data[header[3]] === "Bgy") {
             objData.region = destruct(data[header[0]], 8);
             objData.barangay = data[header[1]];
-            // if test Prov is not prov
-            if (testProvObj) { // if there are no look ups from the 5th digit code
-                if (testProvObj[header[3]] === "Prov") {
-                    objData.province = destruct(data[header[0]], 5);
-                    if (testCityMunObj[header[3]] === "City" || testCityMunObj[header[3]] === "Mun")
-                        objData.cityMunicipality = destruct(data[header[0]], 3);
-                    // else throw new Error(`Unclassified header. Barangay: ${data[header[1]]}`)// test conditions, musn't fall in this block
-                } else if (testProvObj[header[3]] === "City") { // acting as Prov, exists in 5 digit
-                    objData.province = "";
-                    if (testCityMunObj[header[3]] === "SubMun")
-                        objData.cityMunicipality = destruct(data[header[0]], 3);
-                    // else throw new Error(`Unclassified header. Barangay: ${data[header[1]]}`)
-                        // objData.subMunicipality = destruct(data[header[0]], 3); 
-                }  
-            } else if (testCityMunObj[header[3]] === "Mun") { // expecting that the code is unique
-                objData.cityMunicipality = destruct(data[header[0]], 3);
-            }
+            objData.province = testCityMunObj[header[4]] === "HUC" ? "" : destruct(data[header[0]], 5); // if HUC, no Province as default
+            objData.cityMunicipality = destruct(data[header[0]], 3);
             barangayData.push(objData);
         }; // catch those are not fell in the Geo Level list
     });
@@ -180,14 +161,12 @@ export const seed = async (req, res) => {
         let regionCollection = regionModel(`${version}_regions`);
         let provinceCollection = provinceModel(`${version}_provinces`);
         let munCityCollection = cityModel(`${version}_MunCities`);
-        // let subMunCollection = subMunicipalityModel(`${version}_SubMunicipalities`);
         let bgyCollection = barangayModel(`${version}_barangays`);
         let newVersionPSGC = new psgcVersionModel({ fileName: filename, version });
 
         await populate(regionCollection, psgcObj.regionData);
         await populate(provinceCollection, psgcObj.provinceData);
         await populate(munCityCollection, psgcObj.cityMunicipalityData);
-        // await populate(subMunCollection, psgcObj.subMunicipalitiesData);
         await populate(bgyCollection, psgcObj.barangayData);
         await newVersionPSGC.save();
         console.log("Done creation of collections");
