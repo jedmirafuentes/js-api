@@ -3,17 +3,26 @@ import mongo from '../config/db.js';
 const apiAccessSchema = new mongo.schema({
     clientName: {
         type: String,
+        unique: true,
         required: [true, "Client name is required."]
     },
-    applicationSecret: {
+    clientSecret: {
+        type: String,
+        unique: true,
+        required: [true, "Client secret is required."]
+    },
+    accessToken: {
         type: String,
         default: ""
     },
-    apiAccessToken: {
-        type: mongo.schema.Types.ObjectId,
-        default: null
+    expiration: {
+        type: Number,
+        default: 0
     },
-    libraries: [ mongo.schema.Types.ObjectId ], // library name and version
+    library: {
+        type: mongo.schema.Types.ObjectId,
+        required: [true, "Library is required."],
+    },
     author: {
         type: String,
         required: [true, "Author is required."]
