@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import userModel from '../models/user.js';
+import mongo from '../config/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,10 +11,11 @@ const rootDir = path.resolve(__dirname, '..');
 
 async function createSuperAdmin() {
   const superAdminData = {
+    _id: new mongo.mongoose.Types.ObjectId("67404ae44d9f5e1f2c6eb4dd"),
     role: 'Admin',
     email: 'microservice@gov.ph',
     author: 'DICT',
-    password: '$2b$10$tmrN65fBcw4E6EMkPyxaT.TYZJe7sk9hpFgZ2dY4oi7BDGwbQ2nv6',
+    password: 'a809b89f698687b86efdbfada80b400df4793f1139067d27e160014b12a0de10',
     isActive: true,
   };
 
@@ -49,8 +51,8 @@ if (!fs.existsSync(privateKeyFile) || !fs.existsSync(publicKeyFile)) {
     createSuperAdmin();
 }
 
-const privateKey = fs.readFileSync(privateKeyFile, 'utf8');
-const publicKey = fs.readFileSync(publicKeyFile, 'utf8');
+export const privateKey = fs.readFileSync(privateKeyFile, 'utf8');
+export const publicKey = fs.readFileSync(publicKeyFile, 'utf8');
 
-globalThis.privateKey = privateKey;
-globalThis.publicKey = publicKey;
+// globalThis.privateKey = privateKey;
+// globalThis.publicKey = publicKey;
