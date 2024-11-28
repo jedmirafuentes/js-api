@@ -14,7 +14,7 @@ const peekCount = async (model, query) => {
 };
 
 export const fetchRegions = async (req, res) => {
-    let version = req.query.version; // temporary
+    let version = req.library; // temporary
     let regionCollection = regionModel(`${version}_regions`);
     let provinceCollection = provinceModel(`${version}_provinces`);
     let munCityCollection = cityModel(`${version}_MunCities`);
@@ -45,7 +45,7 @@ export const fetchProvinces = async (req, res) => {
     if (!req.query.regionCode) return res.status(400).json({ message: "regionCode is required."});
 
     let regionCode = req.query.regionCode;
-    let version = req.query.version;
+    let version = req.library;
     let provinceCollection = provinceModel(`${version}_provinces`);
 
     try {
@@ -77,7 +77,7 @@ export const fetchMunCities = async (req, res) => {
     if (!req.query.regionCode) return res.status(400).json({ message: "regionCode is required." });
     // if (!req.query.provinceCode) return res.status(400).json({ message: "provinceCode is required." });
 
-    let version = req.query.version;
+    let version = req.library;
     let { provinceCode, regionCode } = req.query;
     let munCityCollection = cityModel(`${version}_MunCities`);
 
@@ -107,7 +107,7 @@ export const fetchBarangays = async (req, res) => {
     if (!req.query.munCityCode) return res.status(400).json({ message: "munCityCode is required." });
 
     let { munCityCode } = req.query;
-    let version = req.query.version;
+    let version = req.library;
     let bgyCollection = barangayModel(`${version}_barangays`);
 
     try {
