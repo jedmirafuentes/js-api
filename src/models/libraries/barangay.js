@@ -1,6 +1,6 @@
 import mongo from '../../config/db.js';
 
-const citySchema = new mongo.schema({
+const barangaySchema = new mongo.schema({
     region: {
         type: String,
         default: ""
@@ -10,6 +10,14 @@ const citySchema = new mongo.schema({
         default: ""
     },
     cityMunicipality: {
+        type: String,
+        default: ""
+    },
+    // subMunicipality: {
+    //     type: String,
+    //     default: ""
+    // },
+    barangay: {
         type: String,
         default: ""
     },
@@ -28,5 +36,5 @@ export default (collectionName) => {
     if (mongo.mongoose.models[collectionName])
         return mongo.mongoose.model(collectionName);
 
-    return mongo.mongoose.model(collectionName, citySchema, collectionName);
+    return mongo.mongoose.model(collectionName, barangaySchema, collectionName);
 };

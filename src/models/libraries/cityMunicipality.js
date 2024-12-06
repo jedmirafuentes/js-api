@@ -1,15 +1,19 @@
 import mongo from '../../config/db.js';
 
-const subMunicipalitySchema = new mongo.schema({
+const citySchema = new mongo.schema({
     region: {
         type: String,
         default: ""
     },
-    cityMunicipality: {
+    province: {
         type: String,
         default: ""
     },
-    subMunicipality: {
+    cityClass: {
+        type: String,
+        default: ""
+    },
+    cityMunicipality: {
         type: String,
         default: ""
     },
@@ -28,5 +32,5 @@ export default (collectionName) => {
     if (mongo.mongoose.models[collectionName])
         return mongo.mongoose.model(collectionName);
 
-    return mongo.mongoose.model(collectionName, subMunicipalitySchema, collectionName);
+    return mongo.mongoose.model(collectionName, citySchema, collectionName);
 };

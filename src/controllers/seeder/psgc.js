@@ -3,22 +3,20 @@ import regionModel from '../../models/libraries/region.js';
 import provinceModel from '../../models/libraries/province.js';
 import cityModel from '../../models/libraries/cityMunicipality.js';
 import barangayModel from '../../models/libraries/barangay.js';
-import subMunicipalityModel from '../../models/libraries/subMunicipality.js';
 import psgcVersionModel from '../../models/psgcVersion.js';
 import mongo from '../../config/db.js';
 
-function convertToArray(worksheet, header) {
+function convertToArray(worksheet, header, headerIndex) {
     const psgcList = [];
-
     worksheet.eachRow((row, rowPosition) => {
         if (rowPosition === 1) return;
 
         const rowData = {};
 
         header.forEach((colHeader, colNumber) => {
-            rowData[colHeader] = [0, null, undefined, ""].includes(row.getCell(colNumber + 1).value) ? 
-                                    row.getCell(colNumber + 1).value:
-                                    row.getCell(colNumber + 1).value.toString();
+            rowData[colHeader] = [0, null, undefined, ""].includes(row.getCell(headerIndex[colNumber]).value) ? 
+                                    row.getCell(headerIndex[colNumber]).value :
+                                    row.getCell(headerIndex[colNumber]).value.toString();
         });
         if (!rowData[header[3]]) return;
         psgcList.push(rowData);
@@ -31,8 +29,8 @@ function disseminate(psgcList, header) {
     let regionData = [];
     let provinceData = [];
     let cityMunicipalityData = [];
-    let subMunicipalitiesData = [];
     let barangayData = [];
+    let last_occurred_city = {};
     const destruct = (code, zeroCount) => {
         return `${code.slice(0, -zeroCount)}${'0'.repeat(zeroCount)}`;
     };
@@ -43,6 +41,8 @@ function disseminate(psgcList, header) {
     psgcList.forEach((data) => {
         if (!data[header[3]]) return;
 
+        let testProvObj = lookUp(destruct(data[header[0]], 5));
+        let testCityMunObj = lookUp(destruct(data[header[0]], 3));
         let objData = {
             tenDigitCode: data[header[0]],
             nineDigitCode: data[header[2]],
@@ -55,44 +55,51 @@ function disseminate(psgcList, header) {
             objData.region = destruct(data[header[0]], 8);
             objData.province = data[header[1]];
             provinceData.push(objData);
-        } else if (data[header[3]] === "City" || data[header[3]] === "Mun") {
-            objData.region = destruct(data[header[0]], 8);
-            objData.province = destruct(data[header[0]], 5);
-            objData.cityMunicipality = data[header[1]];
-            cityMunicipalityData.push(objData);
-        } else if (data[header[3]] === "SubMun") {
-            objData.region = destruct(data[header[0]], 8);
-            objData.cityMunicipality = destruct(data[header[0]], 5);
-            objData.subMunicipality = data[header[1]];
-            subMunicipalitiesData.push(objData);
-        } else if (data[header[3]] === "Bgy") {
-            let testProvObj = lookUp(destruct(data[header[0]], 5));
-            let testCityMunObj = lookUp(destruct(data[header[0]], 3));
-            
+        } else if (data[header[3]] === "City" || data[header[3]] === "Mun" || data[header[3]] === "SubMun") {
+            if (data[header[3]] === "SubMun") {
+                let cityOrigin = lookUp(destruct(data[header[0]], 5)); // assuming the city is 5digit and 5digit zeros
+                
+                if (Object.keys(last_occurred_city).length === 0) {
+                    last_occurred_city = cityOrigin;
+                    console.log("last_occurred_city: ", last_occurred_city);
+
+                    let cityIndex = cityMunicipalityData.findIndex(element => element.tenDigitCode === last_occurred_city[header[0]]);
+
+                    cityMunicipalityData.splice(cityIndex, 1);
+                } else if (cityOrigin[header[1]] !== last_occurred_city[header[1]]) {
+                    last_occurred_city = cityOrigin;
+                    console.log("last_occurred_city: ", last_occurred_city);
+
+                    let cityIndex = cityMunicipalityData.findIndex(element => element.tenDigitCode === last_occurred_city[header[0]]);
+                    
+                    cityMunicipalityData.splice(cityIndex, 1);
+                }
+                objData.region = destruct(data[header[0]], 8);
+                objData.province = "";
+                objData.cityMunicipality = `${last_occurred_city[header[1]]} - ${data[header[1]]}`
+                objData.cityClass = last_occurred_city[header[4]];
+                cityMunicipalityData.push(objData);
+            } else {
+                objData.region = destruct(data[header[0]], 8);
+                objData.cityMunicipality = data[header[1]];
+                objData.cityClass = data[header[4]];
+                if (testProvObj) 
+                    if (testProvObj[header[3]] === "Prov") objData.province = destruct(data[header[0]], 5);
+                    else objData.province = "";
+                else objData.province = "";
+                cityMunicipalityData.push(objData);
+            }
+        } 
+        else if (data[header[3]] === "Bgy") {
             objData.region = destruct(data[header[0]], 8);
             objData.barangay = data[header[1]];
-            // if test Prov is not prov
-            if (testProvObj) { // if there are no look ups from the 5th digit code
-                if (testProvObj[header[3]] === "Prov") {
-                    objData.province = destruct(data[header[0]], 5);
-                    if (testCityMunObj[header[3]] === "City" || testCityMunObj[header[3]] === "Mun")
-                        objData.cityMunicipality = destruct(data[header[0]], 3);
-                    if (testCityMunObj[header[3]] === "SubMun") 
-                        console.log("SubMun: ", data)// test conditions, musn't fall in this block
-                } else if (testProvObj[header[3]] === "City") { // acting as Prov, exists in 5 digit
-                    objData.province = "";
-                    objData.cityMunicipality = destruct(data[header[0]], 5);
-                    if (testCityMunObj[header[3]] === "SubMun")
-                        objData.subMunicipality = destruct(data[header[0]], 3); 
-                }  
-            } else if (testCityMunObj[header[3]] === "Mun") { // expecting that the code is unique
-                objData.cityMunicipality = destruct(data[header[0]], 3);
-            }
+            objData.province = testCityMunObj[header[4]] === "HUC" ? "" : destruct(data[header[0]], 5); // if HUC, no Province as default
+            objData.cityMunicipality = destruct(data[header[0]], 3);
             barangayData.push(objData);
         }; // catch those are not fell in the Geo Level list
     });
 
-    return { regionData, provinceData, cityMunicipalityData, subMunicipalitiesData, barangayData };
+    return { regionData, provinceData, cityMunicipalityData, barangayData };
 };
 
 async function populate(collection, library) {
@@ -126,9 +133,10 @@ export const seed = async (req, res) => {
         if (worksheet == undefined)
             return res.status(400).send('Missing required worksheet in excel file.');
 
-        const header = ["10-digit PSGC", "Name", "Correspondence Code", "Geographic Level"];
+        const header = ["10-digit PSGC", "Name", "Correspondence Code", "Geographic Level", "City Class"];
         const firstRow = worksheet.getRow(1);
         const fileHeader = firstRow.values;
+        const headerIndex = header.map((element) => fileHeader.indexOf(element));
         const isHeaderPassed = () => {
             return header.every((thisHeader) => {
                 return fileHeader.includes(thisHeader)
@@ -140,7 +148,7 @@ export const seed = async (req, res) => {
 
         console.log("Processing the file...");
 
-        const psgcList = convertToArray(worksheet, header);
+        const psgcList = convertToArray(worksheet, header, headerIndex);
 
         console.log("Done processing the file");
         console.log("Disseminating data...");
@@ -153,14 +161,12 @@ export const seed = async (req, res) => {
         let regionCollection = regionModel(`${version}_regions`);
         let provinceCollection = provinceModel(`${version}_provinces`);
         let munCityCollection = cityModel(`${version}_MunCities`);
-        let subMunCollection = subMunicipalityModel(`${version}_SubMunicipalities`);
         let bgyCollection = barangayModel(`${version}_barangays`);
         let newVersionPSGC = new psgcVersionModel({ fileName: filename, version });
 
         await populate(regionCollection, psgcObj.regionData);
         await populate(provinceCollection, psgcObj.provinceData);
         await populate(munCityCollection, psgcObj.cityMunicipalityData);
-        await populate(subMunCollection, psgcObj.subMunicipalitiesData);
         await populate(bgyCollection, psgcObj.barangayData);
         await newVersionPSGC.save();
         console.log("Done creation of collections");

@@ -21,7 +21,6 @@ if(replica){
     mongoconnection = `mongodb://${credentials}${dbhost}/${dbname}`;
 }
 
-console.clear();
 console.log(`connecting to mongoose connection: \n\n${mongoconnection}\n`);
 
 mongoose
