@@ -6,8 +6,9 @@ import cors from 'cors';
 import passport from 'passport';
 import helmet from 'helmet';
 import './config/db.js';
-import './config/pemAdminCreate.js';
+import './config/pem.js';
 import * as config from './config/config.js';
+import environment from "./config/environment.js";
 
 import psgcRoute from './routes/seeder/psgc.js';
 import psgcLibraries from './routes/libraries/psgc.js';
@@ -33,4 +34,4 @@ app.use('/api/psgc/lib', psgcLibraries);
 
 app.use(config.routeNotFound);
 
-export default app;
+app.listen(environment.port, () => console.log(`Server is running on port ${environment.port}`));
