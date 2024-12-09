@@ -5,13 +5,7 @@ dotenv.config();
 const port = process.env.PORT || '3000';
 const env = process.env.ENV || 'local';
 
-const db = env === 'local' ? {
-    HOST: '127.0.0.1:27017',
-    REPLICA: "",
-    USERNAME: "",
-    PASSWORD: "",
-    DBNAME: 'psgc'
-} : {
+const db = {
     HOST: process.env[`HOST_${env}_ENV`],
     REPLICA: process.env[`REPLICA_${env}_ENV`],
     USERNAME: process.env[`USERNAME_${env}_ENV`],
