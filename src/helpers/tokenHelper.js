@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { privateKey, publicKey } from '../config/pemAdminCreate.js';
+import { privateKey, publicKey } from '../config/pem.js';
 
 /**
  * 
