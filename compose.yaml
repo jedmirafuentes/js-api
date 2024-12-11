@@ -1,0 +1,48 @@
+name: microservice_app
+services:
+  mongo:
+    image: mongo:7.0.6
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - microservice_app
+    
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - mongo
+    networks:
+      - microservice_app
+
+  caddy:
+    image: caddy:2.8.4-alpine
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - microservice_app
+    depends_on:
+      - api
+  
+volumes:
+  mongo_data:
+  caddy_data:
+  caddy_config:
+  
+networks:
+  microservice_app:
+    driver: bridge
