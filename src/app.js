@@ -28,6 +28,10 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(config.loggingHandler);
 app.use(config.upload.single('file'), config.errorHandler);
 
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
+
 app.use('/api/psgc', psgcRoute);
 app.use('/api/auth', auth);
 app.use('/api/psgc/lib', psgcLibraries);
