@@ -34,7 +34,7 @@ function bearerTokenAuth (req) {
 
         try {
             const data = verifyAuthToken(req.headers.authorization.split(" ")[1]); // token
-            const user = await userModel.findById(data.id);
+            const user = await userModel.findById(data._id);
 
             if (user) resolve(user);
             else reject("Invalid Authorization Credentials");
@@ -131,6 +131,21 @@ export const protectByToken = async (req, res, next) => {
         return res.status(401).json({ success: false, msg: "Not Authorized to access this resource." });
     }
 };
+
+export const protectedByAdminCredsOnly = async (req, res, next) => {
+    try {
+        bearerTokenAuth(req).then((data) => {
+            if (data.role !== "Admin")
+                return res.status(401).json({ success: false, msg: "Not authorized to access this resource." });
+            req.sessionData = data;
+            next();
+        }).catch(() => {
+            return res.status(401).json({ success: false, msg: "Invalid Authorization Credentials" });
+        })
+    } catch (error) {
+        return res.status(401).json({ success: false, msg: "Something went wrong" });
+    }
+};  
 
 // export const basicAuth = async (req, res, next) => {
 //   // check for basic auth header
