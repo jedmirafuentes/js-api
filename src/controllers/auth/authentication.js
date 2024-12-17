@@ -7,7 +7,14 @@ import mongo from '../../config/db.js';
 
 export const create = async (req, res) => {
     try {
-        let user = new userModel(req.body);
+        let user = new userModel({
+            email: req.body.email,
+            password: req.body.password,
+            firstname: req.body.firstname,
+            lastname: req.body.lastname,
+            role: req.body.role,
+            author: req.sessionData.fullname
+        });
         let newUser = await user.save();
         let password = encryptPassword(newUser.password, newUser._id);
 
@@ -46,20 +53,20 @@ export const apiAccessCreate = async (req, res) => {
         if (!req.body.library) throw new Error("Library is required");
         if (!req.body.clientSecret) throw new Error("Client Secret is required");
 
-        // let clientSecret = req.body.clientSecret ? 
+        let clientSecret = encryptPassword(req.body.library, req.body.library);
         let library = await psgcVersionModel.findOne({ version: req.body.library });
 
         if (!library) throw new Error("Library not found.");
 
         let apiAccess = new apiAccessModel({
+            clientSecret,
             clientName: req.body.clientName,
-            clientSecret: req.body.clientSecret,
             library: library._id,
             author: req.sessionData.fullname
         });
         
         await apiAccess.save();
-        return res.status(201).json({ success: true, msg: "API Access created successfully" });
+        return res.status(201).json({ success: true, msg: "API Access created successfully", data: { clientSecret} });
     } catch (error) {
         console.error(error);
         return res.status(400).json({ success: false, msg: error.message });
