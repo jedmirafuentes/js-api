@@ -29,7 +29,7 @@ app.use(config.loggingHandler);
 app.use(config.upload.single('file'), config.errorHandler);
 
 app.get('/', (req, res) => {
-    res.send('Hello World!');
+    res.json({ status: 'healthy'});
 });
 
 app.use('/api/psgc', psgcRoute);
